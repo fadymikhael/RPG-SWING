@@ -2,16 +2,15 @@ package cours3;
 
 public class Obstacle extends Destructible {
 
-    private static final double LIFE = 50; // Vie initiale de l'obstacle
+    private static final double BASE_LIFE = 50; // Vie initiale de l'obstacle
+    private static final double BASE_DAMAGE = 5; // Dégâts de base de l'obstacle
 
-    // Constructeur qui initialise la santé de l'obstacle avec la valeur par défaut
     public Obstacle() {
-        super(LIFE); // Appelle le constructeur de la classe parente pour initialiser la santé
+        super(BASE_LIFE); // Initialise la santé avec la valeur de base
     }
 
-    // Redéfinition de la méthode hit() pour infliger des dégâts à l'obstacle
-    @Override
-    public void hit(double damage) {
-        this.health -= damage; // Réduit la santé de l'obstacle en fonction des dégâts reçus
+    // Vérifie si l'obstacle est détruit
+    public boolean isDestroyed() {
+        return this.health <= 0;
     }
 }

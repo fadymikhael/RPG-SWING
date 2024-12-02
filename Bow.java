@@ -7,11 +7,11 @@ public class Bow extends Weapon {
     private static final String NAME = "Bow";
 
     private static final double MONSTER_DAMAGE_RATIO = 1.0;
-    private static final double OBSTACLE_DAMAGE_RATIO = 0.5;
+
 
     // Constructeur appelant le constructeur de la classe parente Weapon
     public Bow() {
-        super(DAMAGE, PRICE, NAME, MONSTER_DAMAGE_RATIO, OBSTACLE_DAMAGE_RATIO);
+        super(DAMAGE, PRICE, NAME, MONSTER_DAMAGE_RATIO);
     }
 
     @Override

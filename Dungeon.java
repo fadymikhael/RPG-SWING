@@ -1,104 +1,164 @@
 package cours3;
+
 import java.util.Random;
 
 class Dungeon {
-    private char[][] map; // Carte du donjon représentée par une matrice de caractères
-    private int playerRow; // Position actuelle du joueur (ligne)
-    private int playerCol; // Position actuelle du joueur (colonne)
-    private Random random; // Générateur de nombres aléatoires pour peupler la carte
+    private char[][] map;               // Carte du donjon
+    private Monster[][] monsters;       // Monstres présents sur la carte
+    private Obstacle[][] obstacles;     // Obstacles présents sur la carte
+    private Random random;
+    private boolean isGameComplete = false; // Indique si le jeu est terminé
 
-    // Constructeur pour initialiser la carte du donjon
+    // Constantes pour représenter les éléments du donjon
+    public static final char PLAYER = 'P';
+    public static final char MONSTER = 'M';
+    public static final char OBSTACLE = 'O';
+    public static final char EXIT = 'E';
+    public static final char EMPTY = '.';
+
+    /**
+     * Constructeur du donjon.
+     *
+     * @param rows Nombre de lignes.
+     * @param cols Nombre de colonnes.
+     */
     public Dungeon(int rows, int cols) {
         map = new char[rows][cols];
-        playerRow = 0; // Position initiale du joueur en haut à gauche
-        playerCol = 0;
+        monsters = new Monster[rows][cols];
+        obstacles = new Obstacle[rows][cols];
         random = new Random();
     }
 
-    // Méthode pour initialiser la carte avec des monstres, des obstacles et des cases vides
+    public char[][] getMap() {
+        return map;
+    }
+
+    public Obstacle[][] getObstacles() {
+        return obstacles;
+    }
+
+    /**
+     * Initialise le donjon avec des monstres, obstacles et une sortie.
+     */
     public void initializeDungeon() {
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
-                int rand = random.nextInt(5); // Génère un nombre aléatoire entre 0 et 4
+                int rand = random.nextInt(5);
                 if (rand == 0) {
-                    map[i][j] = 'M'; // 'M' représente un monstre
+                    map[i][j] = MONSTER;
+                    monsters[i][j] = new Monster();
                 } else if (rand == 1) {
-                    map[i][j] = 'O'; // 'O' représente un obstacle
+                    map[i][j] = OBSTACLE;
+                    obstacles[i][j] = new Obstacle();
                 } else {
-                    map[i][j] = '.'; // '.' représente une case vide
+                    map[i][j] = EMPTY;
                 }
             }
         }
-        map[0][0] = 'P'; // Place le joueur à la position initiale
-        map[map.length - 1][map[0].length - 1] = 'E'; // Place la sortie à la position finale
-        printMap(); // Affiche la carte initialisée
+        map[0][0] = PLAYER; // Position initiale du joueur
+        map[map.length - 1][map[0].length - 1] = EXIT; // Position de la sortie
     }
 
-    // Méthode pour afficher la carte du donjon
-    public void printMap() {
-        System.out.println("\n=== Carte du Donjon ===");
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                // Affichage coloré pour différents types de cases
-                if (map[i][j] == 'P') {
-                    System.out.print("\u001B[32mP\u001B[0m "); // Vert pour le joueur
-                } else if (map[i][j] == 'M') {
-                    System.out.print("\u001B[31mM\u001B[0m "); // Rouge pour les monstres
-                } else if (map[i][j] == 'O') {
-                    System.out.print("\u001B[33mO\u001B[0m "); // Jaune pour les obstacles
-                } else if (map[i][j] == 'E') {
-                    System.out.print("\u001B[34mE\u001B[0m "); // Bleu pour la sortie
-                } else {
-                    System.out.print(". "); // Case vide
-                }
-            }
-            System.out.println();
-        }
-        System.out.println("======================");
+    /**
+     * Vérifie si le joueur est à la sortie.
+     *
+     * @param player Instance du joueur.
+     * @return `true` si le joueur est à la sortie, sinon `false`.
+     */
+    public boolean isAtExit(Player player) {
+        int x = player.getX();
+        int y = player.getY();
+        return map[x][y] == EXIT;
     }
 
-    // Méthode pour déplacer le joueur dans la carte
-    public boolean movePlayer(String direction, Player player) {
-        map[playerRow][playerCol] = '.'; // Efface la position actuelle du joueur
+    /**
+     * Gère le déplacement du joueur dans le donjon.
+     *
+     * @param direction Direction du déplacement (haut, bas, gauche, droite).
+     * @param player    Instance du joueur.
+     * @return Message décrivant l'état après le déplacement.
+     */
+    public String movePlayer(String direction, Player player) {
+        int x = player.getX();
+        int y = player.getY();
+        map[x][y] = Dungeon.EMPTY; // Efface l'ancienne position du joueur
 
-        // Déplacement en fonction de la direction donnée
+        // Détermine la nouvelle position
         switch (direction.toLowerCase()) {
-            case "haut":
-                if (playerRow > 0) playerRow--;
-                break;
-            case "bas":
-                if (playerRow < map.length - 1) playerRow++;
-                break;
-            case "gauche":
-                if (playerCol > 0) playerCol--;
-                break;
-            case "droite":
-                if (playerCol < map[0].length - 1) playerCol++;
-                break;
-            default:
-                System.out.println("Direction invalide.");
-                return false; // Retourne false si la direction est invalide
+            case "haut" -> x = Math.max(0, x - 1);
+            case "bas" -> x = Math.min(map.length - 1, x + 1);
+            case "gauche" -> y = Math.max(0, y - 1);
+            case "droite" -> y = Math.min(map[0].length - 1, y + 1);
+            default -> {
+                return "Direction invalide.";
+            }
         }
 
-        // Gestion des événements selon le type de case où le joueur se déplace
-        if (map[playerRow][playerCol] == 'M') {
-            System.out.println("Vous avez rencontré un monstre !");
-            player.takeDamage(random.nextDouble() * 20 + 10); // Inflige des dégâts entre 10 et 30
-            player.gainXP(10); // Gagne de l'XP
-            player.addGold(20); // Gagne de l'or
-        } else if (map[playerRow][playerCol] == 'O') {
-            System.out.println("Vous avez rencontré un obstacle !");
-            player.takeDamage(random.nextDouble() * 5 + 5); // Inflige des dégâts entre 5 et 10
-        } else if (map[playerRow][playerCol] == 'E') {
-            System.out.println("Félicitations ! Vous avez trouvé la sortie du donjon !");
-            player.gainXP(50); // Gagne beaucoup d'XP
-            player.addGold(100); // Gagne beaucoup d'or
-            return true; // Indique que la sortie a été trouvée
+        StringBuilder message = new StringBuilder();
+
+        // Gestion des interactions
+        switch (map[x][y]) {
+            case Dungeon.MONSTER -> handleMonsterInteraction(x, y, player, message);
+            case Dungeon.OBSTACLE -> {
+                message.append("Un obstacle bloque votre chemin.\n");
+                x = player.getX();
+                y = player.getY();
+            }
+            case Dungeon.EXIT -> {
+                message.append("Félicitations ! Vous avez trouvé la sortie !");
+                isGameComplete = true;
+                player.setPosition(x, y);
+                return message.toString();
+            }
         }
 
-        // Met à jour la position du joueur sur la carte
-        map[playerRow][playerCol] = 'P';
-        printMap(); // Affiche la carte mise à jour
-        return false;
+        // Si le joueur est mort
+        if (!player.isAlive()) {
+            return "Game Over ! Votre santé est à 0.";
+        }
+
+        // Mettre à jour la position et retourner le message
+        player.setPosition(x, y);
+        map[x][y] = Dungeon.PLAYER;
+
+        return message.toString();
+    }
+
+
+    private void handleMonsterInteraction(int x, int y, Player player, StringBuilder message) {
+        Monster monster = monsters[x][y];
+        if (monster != null && monster.isAlive()) {
+            // Dégâts infligés par le monstre
+            double damageFromMonster = monster.attackPlayer();
+            player.takeDamage(damageFromMonster);
+            message.append("Le monstre vous attaque et inflige ")
+                    .append(String.format("%.2f", damageFromMonster))
+                    .append(" dégâts.\n");
+
+            // Dégâts infligés au monstre
+            double damageToMonster = player.getAttackPower();
+            if (player.getEquippedWeapon() != null) {
+                damageToMonster += player.getEquippedWeapon().calculateDamageForMonster();
+            }
+            monster.hit(damageToMonster);
+            message.append("Vous attaquez le monstre et infligez ")
+                    .append(String.format("%.2f", damageToMonster))
+                    .append(" dégâts.\n");
+
+            // Si le monstre est vaincu
+            if (!monster.isAlive()) {
+                monsters[x][y] = null; // Retire le monstre de la carte
+                double xpEarned = monster.grantXP();
+                double goldEarned = monster.grantGold();
+                player.gainXP(xpEarned);
+                player.addGold(goldEarned);
+
+                message.append("Vous avez vaincu le monstre !\n")
+                        .append("Récompenses : ").append(xpEarned).append(" XP et ")
+                        .append(goldEarned).append(" pièces d'or.\n");
+            } else {
+                message.append("Le monstre est toujours en vie. Préparez-vous pour une autre attaque.\n");
+            }
+        }
     }
 }

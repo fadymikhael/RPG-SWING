@@ -6,11 +6,10 @@ public class Hammer extends Weapon {
     private static final double PRICE = 10;
     private static final String NAME = "Hammer";
     private static final double MONSTER_DAMAGE_RATIO = 0.7;
-    private static final double OBSTACLE_DAMAGE_RATIO = 1.2;
 
     // Constructeur appelant le constructeur de la classe parente Weapon
     public Hammer() {
-        super(DAMAGE, PRICE, NAME, MONSTER_DAMAGE_RATIO, OBSTACLE_DAMAGE_RATIO);
+        super(DAMAGE, PRICE, NAME, MONSTER_DAMAGE_RATIO);
     }
 
     @Override

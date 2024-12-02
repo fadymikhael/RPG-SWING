@@ -1,118 +1,96 @@
 package cours3;
-import java.util.InputMismatchException;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Random;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final String GAME_TITLE = "RPG Game";
+    private static final String ICON_PATH = "img/rpg-game.png";
+    private static final Dimension WINDOW_SIZE = new Dimension(1200, 800);
+
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Bienvenue dans le RPG Textuel !");
-
-        // Variable pour contrôler la boucle du jeu
-        boolean playing = true;
-
-        // Création du personnage du joueur
-        System.out.print("Entrez le nom de votre personnage : ");
-        String playerName = scanner.nextLine();
-        String characterClass;
-
-        // Boucle pour choisir une classe valide
-        while (true) {
-            System.out.print("Choisissez une classe (Sorcier, Elfe, Guerrier) : ");
-            characterClass = scanner.nextLine();
-            if (characterClass.equalsIgnoreCase("Sorcier") ||
-                    characterClass.equalsIgnoreCase("Elfe") ||
-                    characterClass.equalsIgnoreCase("Guerrier")) {
-                break; // Sort de la boucle si la classe est valide
-            } else {
-                System.out.println("Classe invalide. Veuillez choisir entre Sorcier, Elfe ou Guerrier.");
-            }
-        }
-
-        // Création du joueur avec les caractéristiques choisies
-        Player player = new Player(playerName, characterClass);
-        System.out.println("Personnage créé ! Voici vos caractéristiques :");
-        player.displayStats();
-
-        // Initialisation et affichage des armes disponibles dans le magasin
-        WeaponStore store = new WeaponStore();
-        System.out.println("\nBienvenue au magasin d'armes ! Voici les armes disponibles :");
-        store.printWeapons();
-
-        // Création et initialisation du donjon
-        Dungeon dungeon = new Dungeon(5, 5); // Création d'une carte 5x5
-        dungeon.initializeDungeon();
-
-        // Boucle principale du jeu
-        while (playing) {
+        // Lancer l'interface utilisateur sur le thread de l'EDT
+        SwingUtilities.invokeLater(() -> {
             try {
-                // Affichage du menu des actions disponibles
-                System.out.println("\nQue souhaitez-vous faire ?");
-                System.out.println("1. Acheter une arme");
-                System.out.println("2. Consulter l'inventaire");
-                System.out.println("3. Vérifier le statut XP");
-                System.out.println("4. Se déplacer");
-                System.out.println("5. Utiliser votre sort spécial");
-                System.out.println("6. Quitter le jeu");
-                System.out.print("Votre choix : ");
-
-                // Lecture du choix de l'utilisateur
-                int choice = scanner.nextInt();
-                scanner.nextLine(); // Consommer le saut de ligne
-
-                switch (choice) {
-                    case 1:
-                        // Achat d'une arme
-                        System.out.print("Entrez le nom de l'arme à acheter : ");
-                        String weaponName = scanner.nextLine();
-                        Weapon weapon = store.buyWeapon(weaponName, player);
-                        if (weapon != null) {
-                            player.addWeaponToInventory(weapon);
-                            System.out.println(weapon.getName() + " a été ajouté à votre inventaire.");
-                        } else {
-                            System.out.println("Achat échoué. Vérifiez votre argent ou le nom de l'arme.");
-                        }
-                        break;
-                    case 2:
-                        // Affichage de l'inventaire du joueur
-                        player.showInventory();
-                        break;
-                    case 3:
-                        // Vérification du statut XP du joueur
-                        player.checkXPStatus();
-                        break;
-                    case 4:
-                        // Déplacement dans le donjon
-                        System.out.print("Entrez la direction (haut, bas, gauche, droite) : ");
-                        String direction = scanner.nextLine();
-                        if (dungeon.movePlayer(direction, player)) {
-                            playing = false; // Fin du jeu si le joueur trouve la sortie
-                            System.out.println("Merci d'avoir joué au RPG Textuel !");
-                        }
-                        break;
-                    case 5:
-                        // Utilisation du sort spécial avec un monstre
-                        Monster monster = new Monster();  // Crée un monstre
-                        player.useSpecialPower(monster);  // Passe le monstre à la méthode
-                        break;
-                    case 6:
-                        // Quitter le jeu
-                        playing = false;
-                        System.out.println("Merci d'avoir joué au RPG Textuel !");
-                        break;
-                    default:
-                        // Gestion des choix invalides
-                        System.out.println("Choix invalide. Veuillez entrer un nombre entre 1 et 6.");
-                }
-            } catch (InputMismatchException e) {
-                // Gestion des erreurs de saisie incorrecte
-                System.out.println("Erreur : Veuillez entrer un nombre valide pour votre choix.");
-                scanner.nextLine(); // Nettoyer l'entrée incorrecte
+                initializeGame();
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Erreur lors de l'initialisation du jeu.", e);
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Erreur : Impossible de démarrer l'application.",
+                        "Erreur",
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
-        }
-
-        scanner.close(); // Fermer le scanner à la fin du jeu
+        });
     }
 
+    /**
+     * Initialise et configure la fenêtre principale et les composants du jeu.
+     */
+    private static void initializeGame() {
+        JFrame frame = createMainFrame();
+
+        // Création du gestionnaire de cartes et du panneau principal
+        CardLayout cardLayout = new CardLayout();
+        JPanel mainPanel = new JPanel(cardLayout);
+
+        // Initialisation des objets du jeu
+        Player player = new Player("Joueur", "Sorcier"); // Exemple de joueur
+        Dungeon dungeon = new Dungeon(5, 5); // Création du donjon
+        WeaponStore weaponStore = new WeaponStore(); // Création du magasin d'armes
+
+        // Initialisation et ajout des panneaux
+        initializePanels(mainPanel, cardLayout, player, dungeon, weaponStore);
+
+        // Ajouter le panneau principal au cadre
+        frame.add(mainPanel);
+
+        // Afficher le panneau de démarrage
+        cardLayout.show(mainPanel, "MenuStartPanel");
+
+        // Afficher la fenêtre
+        frame.setVisible(true);
+    }
+
+
+    private static JFrame createMainFrame() {
+        JFrame frame = new JFrame(GAME_TITLE);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(WINDOW_SIZE);
+        frame.setLocationRelativeTo(null);
+
+        // Ajouter une icône à la fenêtre, si disponible
+        try {
+            frame.setIconImage(new ImageIcon(ICON_PATH).getImage());
+        } catch (Exception e) {
+            LOGGER.warning("Icône non trouvée : " + ICON_PATH + ". Erreur : " + e.getMessage());
+        }
+
+        return frame;
+    }
+
+    /**
+     * Initialise les panneaux et les ajoute au gestionnaire de cartes.
+     *
+     * @param mainPanel     Panneau principal utilisant CardLayout.
+     * @param cardLayout    Gestionnaire de cartes pour basculer entre les panneaux.
+     * @param player        Instance du joueur.
+     * @param dungeon       Instance du donjon.
+     * @param weaponStore   Instance du magasin d'armes.
+     */
+    private static void initializePanels(JPanel mainPanel, CardLayout cardLayout, Player player, Dungeon dungeon, WeaponStore weaponStore) {
+        // Création des panneaux
+        MenuStartPanel menuStartPanel = new MenuStartPanel(mainPanel, cardLayout, player, weaponStore);
+        WeaponStorePanel weaponStorePanel = new WeaponStorePanel(player, weaponStore, mainPanel, cardLayout);
+        GamePanel gamePanel = new GamePanel(player, dungeon, mainPanel, cardLayout);
+
+        // Ajout des panneaux au gestionnaire de cartes
+        mainPanel.add(menuStartPanel, "MenuStartPanel");
+        mainPanel.add(weaponStorePanel, "WeaponStorePanel");
+        mainPanel.add(gamePanel, "GamePanel");
+    }
 }

@@ -1,63 +1,41 @@
 package cours3;
 
 public abstract class Weapon {
-
     protected double damage;
     protected double price;
     protected String name;
+    protected double monsterDamageRatio;
 
-    protected double monster_damage_ratio;
-    protected double obstacle_damage_ratio;
-
-    // Constructeur
-    public Weapon(double d, double p, String name, double monsterRatio, double obstacleRatio) {
-        this.damage = d;
-        this.price = p;
+    public Weapon(double damage, double price, String name, double monsterRatio) {
+        if (damage < 0 || price < 0 || monsterRatio < 0) {
+            throw new IllegalArgumentException("Les valeurs ne peuvent pas être négatives.");
+        }
+        this.damage = damage;
+        this.price = price;
         this.name = name;
-        this.monster_damage_ratio = monsterRatio;
-        this.obstacle_damage_ratio = obstacleRatio;
+        this.monsterDamageRatio = monsterRatio;
     }
 
-    // Getter pour damage
-    public double getDamage() {
-        return this.damage;
+    public double calculateDamageForMonster() {
+        return this.damage * this.monsterDamageRatio;
     }
 
-    // Getter pour name
     public String getName() {
-        return this.name;
+        return name;
     }
 
-    // Getter pour price
+    public double getDamage() {
+        return damage;
+    }
+
     public double getPrice() {
-        return this.price;
+        return price;
     }
 
-    // Getters pour les ratios
-    public double getMonsterDamageRatio() {
-        return this.monster_damage_ratio;
-    }
-
-    public double getObstacleDamageRatio() {
-        return this.obstacle_damage_ratio;
-    }
-
-    // Méthode abstraite pour l'art ASCII
     public abstract String asciiArt();
 
-    // Méthode pour attaquer un monstre
-    public void attack(Monster m) {
-        m.hit(this.damage * this.getMonsterDamageRatio());
-    }
-
-    // Méthode pour attaquer un obstacle
-    public void attack(Obstacle o) {
-        o.hit(this.damage * this.getObstacleDamageRatio());
-    }
-
-    // Correction de la méthode toString()
     @Override
     public String toString() {
-        return this.name + " - damage = " + this.damage + " - price = " + this.price;
+        return String.format("%s - Dégâts : %.2f - Prix : %.2f", name, damage, price);
     }
 }

@@ -1,15 +1,35 @@
 package cours3;
 
 public class Monster {
-    private  static  final double LIFE = 50;
     private double health;
+    private double xpValue;
+    private double goldValue;
 
-    public  Monster (){
-        this.health = LIFE;
+    public Monster() {
+        this.health = 50; // Exemple
+        this.xpValue = 20; // Exemple
+        this.goldValue = 10; // Exemple
     }
 
-    public  void hit(double d){
+    public double attackPlayer() {
+        return 10 + Math.random() * 10;
+    }
 
-        this.health-=d;
+
+    public void hit(double damage) {
+        health -= damage;
+    }
+
+    public boolean isAlive() {
+        return health > 0;
+    }
+
+    public double grantXP() {
+        return xpValue;
+    }
+
+    public double grantGold() {
+        return goldValue;
     }
 }
+
